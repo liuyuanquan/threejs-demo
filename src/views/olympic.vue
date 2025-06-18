@@ -21,6 +21,7 @@ class World {
   renderer!: THREE.WebGLRenderer
   progress = 0
   fiveCyclesGroup = new THREE.Group()
+  ambientLight!: THREE.AmbientLight
   clock = new THREE.Clock()
   mouseX = 0
   mouseY = 0
@@ -28,6 +29,12 @@ class World {
   windowHalfY = 0
   cube!: THREE.Mesh
   land!: THREE.Object3D
+  meshes = new Array<THREE.Mesh>()
+  debugParams = {
+    ambientLight: {
+      intensity: 10
+    }
+  }
   textureLoader: THREE.TextureLoader
   gltfLoader: GLTFLoader
   manager: THREE.LoadingManager
@@ -55,25 +62,25 @@ class World {
   initScene() {
     this.scene = new THREE.Scene()
     this.scene.background = this.textureLoader.load('sky.f8b8ce554883ed304721.jpg')
+    this.scene.fog = new THREE.Fog(0xffffff, 10, 100)
   }
   initCamera() {
     this.camera = new THREE.PerspectiveCamera(
       60,
       this.container.clientWidth / this.container.clientHeight,
       0.1,
-      10000
+      1000
     )
-    this.camera.position.set(0, 30, 100)
+    this.camera.position.set(0, -1, 20)
     this.camera.lookAt(0, 0, 0)
   }
   initRenderer() {
     const renderer = new THREE.WebGLRenderer({
       antialias: true
     })
-    renderer.outputColorSpace = THREE.SRGBColorSpace
     renderer.setSize(this.container.clientWidth, this.container.clientHeight)
     renderer.setPixelRatio(window.devicePixelRatio)
-    // renderer.shadowMap.enabled = true // 启用渲染器的阴影映射（总开关）
+    renderer.shadowMap.enabled = true // 启用渲染器的阴影映射（总开关）
     // 新版three.js的颜色、光照与旧版不兼容，要手动调整
     THREE.ColorManagement.enabled = false
     renderer.outputColorSpace = THREE.LinearSRGBColorSpace
@@ -92,12 +99,16 @@ class World {
     light.shadow.camera.bottom = -40 // 视锥体下边界
     light.shadow.camera.left = -40 // 视锥体左边界
     light.shadow.camera.right = 40 // 视锥体右边界
-    const lightHelper = new THREE.DirectionalLightHelper(light, 1, 0xffffff)
+    const lightHelper = new THREE.DirectionalLightHelper(light, 1, 0xff0000)
     this.scene.add(lightHelper)
     const lightCameraHelper = new THREE.CameraHelper(light.shadow.camera)
     // this.scene.add(lightCameraHelper)
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1)
+    const ambientLight = new THREE.AmbientLight(
+      0xcfffff,
+      this.debugParams.ambientLight.intensity
+    )
+    this.ambientLight = ambientLight
     this.scene.add(ambientLight)
   }
   initWorld() {
@@ -122,25 +133,14 @@ class World {
     // 地面
     this.gltfLoader.load('land.7188100a8dbff49b41bc.glb', (mesh) => {
       mesh.scene.traverse((child) => {
-        console.log('🚀 ~ World ~ mesh.scene.traverse ~ child:', child)
-        if (child.isMesh) {
+        if (child instanceof THREE.Mesh) {
+          this.meshes.push(child)
           child.material.metalness = 0.1
           child.material.roughness = 0.8
-        }
-        // 地面
-        if (child.name === 'Mesh_2') {
-          child.material.metalness = 0.5
-          child.material.roughness = 0.6
-          child.receiveShadow = true
-        }
-        // 围巾
-        if (child.name === 'Mesh_17') {
-          child.material.metalness = 0.2
-          child.material.roughness = 0.8
-        }
-        // 帽子
-        if (child.name === 'Mesh_17') {
-          //
+          if (child.name === 'Mesh_2') {
+            child.material.metalness = 0.5
+            child.receiveShadow = true
+          }
         }
       })
 
@@ -155,8 +155,8 @@ class World {
     // 旗帜
     this.gltfLoader.load('flag.73c81d66494359ddbc6e.glb', (mesh) => {
       mesh.scene.traverse((child) => {
-        if (child.isMesh) {
-          // meshes.push(child)
+        if (child instanceof THREE.Mesh) {
+          this.meshes.push(child)
           child.castShadow = true
 
           // 旗帜
@@ -185,7 +185,36 @@ class World {
 
     // bingdwendwen
     this.gltfLoader.load('bingdwendwen.bd7d37ead8bb47ccaa79.glb', (mesh) => {
-      console.log('🚀 ~ World ~ loader.load ~ mesh:', mesh)
+      mesh.scene.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          this.meshes.push(child)
+
+          if (child.name === '皮肤') {
+            child.material.metalness = 0.3
+            child.material.roughness = 0.8
+          }
+
+          if (child.name === '外壳') {
+            child.material.transparent = true
+            child.material.opacity = 0.4
+            child.material.metalness = 0.4
+            child.material.roughness = 0
+            child.material.refractionRatio = 1.6
+            child.castShadow = true
+            child.material.envMap = this.textureLoader.load(
+              'sky.f8b8ce554883ed304721.jpg'
+            )
+            child.material.envMapIntensity = 1
+          }
+
+          if (child.name === '围脖') {
+            child.material.transparent = true
+            child.material.opacity = 0.6
+            child.material.metalness = 0.4
+            child.material.roughness = 0.6
+          }
+        }
+      })
 
       mesh.scene.rotation.y = Math.PI / 24
       mesh.scene.position.set(-5, -11.5, 0)
@@ -196,7 +225,12 @@ class World {
 
     // xuerongrong
     this.gltfLoader.load('xuerongrong.2de949bd2eb58f3f9516.glb', (mesh) => {
-      console.log('🚀 ~ World ~ loader.load ~ mesh:', mesh)
+      mesh.scene.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          this.meshes.push(child)
+          child.castShadow = true
+        }
+      })
 
       mesh.scene.rotation.y = Math.PI / 3
       mesh.scene.position.set(-20, -10.8, 0)
@@ -205,30 +239,70 @@ class World {
       // this.scene.add(mesh.scene)
     })
 
+    let treeMaterial = new THREE.MeshPhysicalMaterial({
+      map: this.textureLoader.load('tree.5b95f66c07d500d76b55.png'),
+      transparent: true,
+      side: THREE.DoubleSide,
+      metalness: 0.2,
+      roughness: 0.8,
+      depthTest: true,
+      depthWrite: false,
+      // skinning: false,
+      fog: false,
+      reflectivity: 0.1
+      // refractionRatio: 0
+    })
+
+    let treeCustomDepthMaterial = new THREE.MeshDepthMaterial({
+      depthPacking: THREE.RGBADepthPacking,
+      map: this.textureLoader.load('tree.5b95f66c07d500d76b55.png'),
+      alphaTest: 0.5
+    })
+
     // 树
     this.gltfLoader.load('tree.f250bceb208161a8fcef.gltf', (mesh) => {
-      console.log('🚀 ~ World ~ loader.load ~ mesh:', mesh)
+      mesh.scene.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          this.meshes.push(child)
+          child.material = treeMaterial
+          child.customDepthMaterial = treeCustomDepthMaterial
+        }
+      })
 
-      // mesh.scene.rotation.y = Math.PI / 4
-      // mesh.scene.position.set(0, 0, 0)
-      // mesh.scene.scale.set(0.9, 0.9, 0.9)
-
+      mesh.scene.position.set(14, -9, 0)
+      mesh.scene.scale.set(16, 16, 16)
       // this.scene.add(mesh.scene)
+
+      let tree2 = mesh.scene.clone()
+      tree2.position.set(10, -8, -15)
+      tree2.scale.set(18, 18, 18)
+      // this.scene.add(tree2)
+
+      let tree3 = mesh.scene.clone()
+      tree3.position.set(-18, -8, -16)
+      tree3.scale.set(22, 22, 22)
+      // this.scene.add(tree3)
     })
   }
   initUtils() {
     this.axesHelper = new THREE.AxesHelper(150)
-    this.scene.add(this.axesHelper)
+    // this.scene.add(this.axesHelper)
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
-    this.controls.target.set(0, 0, 0)
+    this.controls.target.set(0, 0, 5)
     this.controls.enableDamping = true
 
     this.stats = new Stats()
     document.body.appendChild(this.stats.dom)
 
     this.gui = new GUI()
-    this.gui.close()
+    this.gui
+      .addFolder('ambientLight')
+      .add(this.debugParams.ambientLight, 'intensity', 0, 10, 0.01)
+      .onChange((value) => {
+        this.ambientLight.intensity = value
+      })
+    // this.gui.close()
   }
   initEventListeners() {
     window.addEventListener('resize', this.onWindowResize.bind(this))
