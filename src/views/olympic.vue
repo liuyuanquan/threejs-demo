@@ -32,7 +32,7 @@ class World {
   meshes = new Array<THREE.Mesh>()
   debugParams = {
     ambientLight: {
-      intensity: 10
+      intensity: 3
     }
   }
   textureLoader: THREE.TextureLoader
@@ -82,8 +82,8 @@ class World {
     renderer.setPixelRatio(window.devicePixelRatio)
     renderer.shadowMap.enabled = true // 启用渲染器的阴影映射（总开关）
     // 新版three.js的颜色、光照与旧版不兼容，要手动调整
-    THREE.ColorManagement.enabled = false
-    renderer.outputColorSpace = THREE.LinearSRGBColorSpace
+    // THREE.ColorManagement.enabled = false
+    // renderer.outputColorSpace = THREE.LinearSRGBColorSpace
     renderer.setAnimationLoop(this.animate.bind(this))
     this.container.appendChild(renderer.domElement)
     this.renderer = renderer
@@ -99,6 +99,7 @@ class World {
     light.shadow.camera.bottom = -40 // 视锥体下边界
     light.shadow.camera.left = -40 // 视锥体左边界
     light.shadow.camera.right = 40 // 视锥体右边界
+    this.scene.add(light)
     const lightHelper = new THREE.DirectionalLightHelper(light, 1, 0xff0000)
     this.scene.add(lightHelper)
     const lightCameraHelper = new THREE.CameraHelper(light.shadow.camera)
