@@ -494,7 +494,7 @@ onMounted(() => {
   if (container.value) {
     new WinterOlympicsScene(container.value)
   }
-  document.title = 'Three.js - 冬奥场景'
+  document.title = 'Olympic - Three.js'
 })
 </script>
 

@@ -1,17 +1,5 @@
 <template>
-  <!-- 三维场景主容器 -->
-  <!-- 使用全视口尺寸，隐藏溢出内容，相对定位用于子元素定位 -->
-  <div
-    ref="container"
-    style="
-      width: 100vw;
-      height: 100vh;
-      position: relative;
-      overflow: hidden;
-      background-color: black;
-    ">
-    <!-- 加载状态指示器 -->
-    <!-- 当资源加载时显示，使用CSS动画增强用户体验 -->
+  <div ref="container" class="container">
     <div v-if="loading" class="loading-overlay">
       <div class="loader"></div>
       <p>场景加载中...</p>
@@ -343,7 +331,7 @@ onMounted(() => {
   // 组件挂载时初始化场景
   init()
 
-  document.title = 'ThreeJS - 基础'
+  document.title = 'Basic - Three.js'
 })
 
 onUnmounted(() => {

@@ -1,22 +1,36 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-// 1. 使用 import.meta.glob 获取所有 views 下的 .vue 文件
-const pageModules = import.meta.glob('../views/*.vue')
+const pageModules = import.meta.glob([
+  '../views/*.vue',
+  '../views/*/index.vue' // 匹配所有一级目录下的 index.vue
+])
 
-// 2. 动态生成路由
-const routes = Object.entries(pageModules).map(([filePath, component]) => {
-  // 提取文件名（如 ../views/demo1.vue → demo1）
-  const routeName = filePath.replace('../views/', '').replace('.vue', '')
+const BLACKLIST = ['template']
 
-  return {
-    path: `/${routeName}`,
-    name: routeName,
-    component, // 直接使用动态导入的组件
-    meta: {
-      title: `${routeName} 示例`
+const routes = Object.entries(pageModules)
+  .map(([filePath, component]) => {
+    let routePath, routeName
+
+    if (filePath.includes('/index.vue')) {
+      // 处理类似 ../views/su7/index.vue → /su7
+      routeName = filePath.split('/')[2] // 提取 su7
+      routePath = `/${routeName}`
+    } else {
+      // 处理类似 ../views/demo1.vue → /demo1
+      routeName = filePath.replace('../views/', '').replace('.vue', '')
+      routePath = `/${routeName}`
     }
-  }
-})
+
+    return {
+      path: routePath,
+      name: routeName,
+      component,
+      meta: {
+        title: `${routeName} 示例`
+      }
+    }
+  })
+  .filter((route) => !BLACKLIST.includes(route.name)) // 过滤黑名单
 
 // 3. 创建路由实例
 const router = createRouter({

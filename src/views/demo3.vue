@@ -1,7 +1,5 @@
 <template>
-  <div
-    ref="container"
-    style="width: 100vw; height: 100vh; position: relative; overflow: hidden"></div>
+  <div ref="container" class="container"></div>
 </template>
 
 <script setup lang="ts">
@@ -373,6 +371,6 @@ onMounted(() => {
   initRender()
   initUtils()
   animate()
-  document.title = 'ThreeJS - 登录'
+  document.title = '登录 - Three.js'
 })
 </script>

@@ -1,7 +1,5 @@
 <template>
-  <div
-    ref="container"
-    style="width: 100vw; height: 100vh; position: relative; overflow: hidden"></div>
+  <div ref="container" class="container"></div>
 </template>
 
 <script setup lang="ts">
@@ -198,6 +196,6 @@ class World {
 
 onMounted(() => {
   new World(container.value)
-  document.title = 'ThreeJS - 雪花'
+  document.title = '雪花 - Three.js'
 })
 </script>

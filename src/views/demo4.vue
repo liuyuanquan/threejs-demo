@@ -1,7 +1,5 @@
 <template>
-  <div
-    ref="container"
-    style="width: 100vw; height: 100vh; position: relative; overflow: hidden"></div>
+  <div ref="container" class="container"></div>
 </template>
 
 <script setup lang="ts">
@@ -247,6 +245,6 @@ onMounted(() => {
   window.addEventListener('resize', handleResize)
   // @ts-ignore
   window.THREE = THREE
-  document.title = 'ThreeJS - 汽车'
+  document.title = '汽车 - Three.js'
 })
 </script>
