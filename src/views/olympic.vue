@@ -33,9 +33,9 @@ class WinterOlympicsScene {
   private clock = new THREE.Clock()
 
   // 工具类
-  private textureLoader: THREE.TextureLoader
-  private gltfLoader: GLTFLoader
-  private loadingManager: THREE.LoadingManager
+  private textureLoader!: THREE.TextureLoader
+  private gltfLoader!: GLTFLoader
+  private loadingManager!: THREE.LoadingManager
   private orbitControls!: OrbitControls
   private stats!: Stats
   private debugGUI!: GUI
@@ -282,7 +282,11 @@ class WinterOlympicsScene {
       transparent: true,
       side: THREE.DoubleSide,
       metalness: 0.2,
-      roughness: 0.8
+      roughness: 0.8,
+      depthTest: true,
+      depthWrite: false,
+      fog: false,
+      reflectivity: 0.1
     })
 
     const treeDepthMaterial = new THREE.MeshDepthMaterial({
