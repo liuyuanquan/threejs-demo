@@ -18,7 +18,7 @@ export default class StartRoom extends kokomi.Component {
 
     const light001 = modelParts[1] as THREE.Mesh
     const lightMat = light001.material as THREE.MeshStandardMaterial
-    lightMat.emissive = new THREE.Color(0xffffff)
+    lightMat.emissive = new THREE.Color(0x000000)
     lightMat.emissiveIntensity = 1
     lightMat.toneMapped = false
     lightMat.transparent = true

@@ -2,11 +2,15 @@ import * as kokomi from 'kokomi.js'
 import * as THREE from 'three'
 import * as dat from 'lil-gui'
 import gsap from 'gsap'
+import { Howl } from 'howler'
 
 import DynamicEnv from './dynamic-env'
 import StartRoom from './start-room'
 import Car from './car'
+import SpeedUp from './speed-up'
+import Furina from './furina'
 
+import eventBus from './utils/eventBus'
 import { resources } from './resources'
 
 export default class World extends kokomi.Base {
@@ -14,6 +18,9 @@ export default class World extends kokomi.Base {
   dynamicEnv!: DynamicEnv
   startRoom!: StartRoom
   car!: Car
+  furina!: Furina
+  speedup!: SpeedUp
+  environment!: kokomi.Environment
 
   am: kokomi.AssetManager
 
@@ -105,11 +112,11 @@ export default class World extends kokomi.Base {
   }
   initHelpers() {
     const axesHelper = new THREE.AxesHelper(150)
-    this.scene.add(axesHelper)
+    // this.scene.add(axesHelper)
 
-    this.stats = new kokomi.Stats(this)
+    // this.stats = new kokomi.Stats(this)
 
-    this.debug = new dat.GUI()
+    // this.debug = new dat.GUI()
   }
   initWorld() {
     this.am.on('ready', () => {
@@ -125,43 +132,139 @@ export default class World extends kokomi.Base {
       this.car = new Car(this)
       this.car.addExisting()
 
-      // 镜头移动
-      this.t1.to(this.params.cameraPos, {
-        x: 0,
-        y: 0.8,
-        z: -7,
-        duration: 4,
-        ease: 'power2.inOut',
-        onStart: () => {
-          this.controls.controls.enabled = false
+      if (this.params.isFurina) {
+        this.furina = new Furina(this)
+        this.furina.addExisting()
+      }
+
+      this.speedup = new SpeedUp(this)
+      this.speedup.addExisting()
+
+      this.environment = new kokomi.Environment(this, {
+        resolution: 512,
+        scene: this.scene,
+        options: {
+          minFilter: THREE.LinearMipMapLinearFilter,
+          anisotropy: 0,
+          depthBuffer: false,
+          generateMipmaps: true
         },
-        onUpdate: () => {
-          this.controls.controls.setPosition(
-            this.params.cameraPos.x,
-            this.params.cameraPos.y,
-            this.params.cameraPos.z
-          )
-        },
-        onComplete: () => {
-          this.controls.controls.enabled = true
-        }
+        textureType: THREE.UnsignedByteType,
+        ignoreObjects: [this.car.model.scene]
       })
+
+      this.interactionManager.add(this.car.model.scene)
+      // @ts-ignore
+      this.car.model.scene.addEventListener('click', () => {
+        this.rush()
+      })
+
+      eventBus.on('enter', () => {
+        this.params.disableInteract = false
+      })
+
+      this.enter()
+
+      const bgm = new Howl({
+        src: 'su7/audio/bgm.mp3',
+        loop: true
+      })
+      bgm.play()
+    })
+  }
+  handleAssets() {
+    const texture1 = this.am.items['ut_car_body_ao'] as THREE.Texture
+    texture1.flipY = false
+    texture1.colorSpace = THREE.LinearSRGBColorSpace
+    texture1.minFilter = THREE.NearestFilter
+    texture1.magFilter = THREE.NearestFilter
+    texture1.channel = 1
+
+    const texture2 = this.am.items['ut_startroom_ao'] as THREE.Texture
+    texture2.flipY = false
+    texture2.colorSpace = THREE.LinearSRGBColorSpace
+    texture2.channel = 1
+
+    const texture3 = this.am.items['ut_startroom_light'] as THREE.Texture
+    texture3.flipY = false
+    texture3.colorSpace = THREE.SRGBColorSpace
+    texture3.channel = 1
+
+    const texture4 = this.am.items['ut_floor_normal'] as THREE.Texture
+    texture4.flipY = false
+    texture4.colorSpace = THREE.LinearSRGBColorSpace
+    texture4.wrapS = THREE.RepeatWrapping
+    texture4.wrapT = THREE.RepeatWrapping
+
+    const texture5 = this.am.items['ut_floor_roughness'] as THREE.Texture
+    texture5.flipY = false
+    texture5.colorSpace = THREE.LinearSRGBColorSpace
+    texture5.wrapS = THREE.RepeatWrapping
+    texture5.wrapT = THREE.RepeatWrapping
+
+    const texture6 = this.am.items['decal'] as THREE.Texture
+    texture6.flipY = false
+    texture6.colorSpace = THREE.LinearSRGBColorSpace
+  }
+  clearAllTweens() {
+    this.t1.clear()
+    this.t2.clear()
+    this.t3.clear()
+    this.t4.clear()
+    this.t5.clear()
+    this.t6.clear()
+    this.t7.clear()
+    this.t8.clear()
+    this.t9.clear()
+  }
+  enter() {
+    this.params.disableInteract = true
+    this.dynamicEnv.setWeight(0)
+    this.startRoom.lightMat.emissive.set(new THREE.Color(0x000000))
+    this.startRoom.lightMat.emissiveIntensity = 0
+    this.dynamicEnv.setIntensity(0)
+    // this.startRoom.customFloorMat.uniforms.uColor.value.set(
+    // 	new THREE.Color("#000000")
+    // )
+    // this.startRoom.customFloorMat.uniforms.uReflectIntensity.value = 0
+    this.furina?.setColor(new THREE.Color(0x000000))
+
+    // 镜头移动
+    this.t1.to(this.params.cameraPos, {
+      x: 0,
+      y: 0.8,
+      z: -7,
+      duration: 4,
+      ease: 'power2.inOut',
+      onStart: () => {
+        this.params.isCameraMoving = true
+      },
+      onComplete: () => {
+        this.params.isCameraMoving = false
+        eventBus.emit('enter')
+      }
     })
 
     // 灯光出现
     const lightColor = new THREE.Color()
-    const blackColor = new THREE.Color('#000000')
-    const whiteColor = new THREE.Color('#ffffff')
+    const blackColor = new THREE.Color(0x000000)
+    const whiteColor = new THREE.Color(0xffffff)
     this.t2.to(this.params, {
       lightAlpha: 1,
       lightIntensity: 1,
-      duration: 4,
+      // reflectIntensity: 25,
+      furinaLerpColor: 1,
       delay: 1,
       ease: 'power2.inOut',
       onUpdate: () => {
         lightColor.copy(blackColor).lerp(whiteColor, this.params.lightAlpha)
         this.startRoom.lightMat.emissive.set(lightColor)
         this.startRoom.lightMat.emissiveIntensity = this.params.lightIntensity
+
+        // this.startRoom.customFloorMat.uniforms.uColor.value.set(lightColor);
+        // this.startRoom.customFloorMat.uniforms.uReflectIntensity.value = this.base.params.reflectIntensity;
+
+        this.furina?.setColor(lightColor)
       }
     })
 
@@ -188,29 +291,114 @@ export default class World extends kokomi.Base {
         '-=2.5'
       )
   }
-  handleAssets() {
-    const items = this.am.items
-    ;(items['ut_car_body_ao'] as THREE.Texture).flipY = false
-    ;(items['ut_car_body_ao'] as THREE.Texture).colorSpace = THREE.LinearSRGBColorSpace
-    ;(items['ut_car_body_ao'] as THREE.Texture).minFilter = THREE.NearestFilter
-    ;(items['ut_car_body_ao'] as THREE.Texture).magFilter = THREE.NearestFilter
-    ;(items['ut_car_body_ao'] as THREE.Texture).channel = 1
-    ;(items['ut_startroom_ao'] as THREE.Texture).flipY = false
-    ;(items['ut_startroom_ao'] as THREE.Texture).colorSpace = THREE.LinearSRGBColorSpace
-    ;(items['ut_startroom_ao'] as THREE.Texture).channel = 1
-    ;(items['ut_startroom_light'] as THREE.Texture).flipY = false
-    ;(items['ut_startroom_light'] as THREE.Texture).colorSpace = THREE.SRGBColorSpace
-    ;(items['ut_startroom_light'] as THREE.Texture).channel = 1
-    ;(items['ut_floor_normal'] as THREE.Texture).flipY = false
-    ;(items['ut_floor_normal'] as THREE.Texture).colorSpace = THREE.LinearSRGBColorSpace
-    ;(items['ut_floor_normal'] as THREE.Texture).wrapS = THREE.RepeatWrapping
-    ;(items['ut_floor_normal'] as THREE.Texture).wrapT = THREE.RepeatWrapping
-    ;(items['ut_floor_roughness'] as THREE.Texture).flipY = false
-    ;(items['ut_floor_roughness'] as THREE.Texture).colorSpace =
-      THREE.LinearSRGBColorSpace
-    ;(items['ut_floor_roughness'] as THREE.Texture).wrapS = THREE.RepeatWrapping
-    ;(items['ut_floor_roughness'] as THREE.Texture).wrapT = THREE.RepeatWrapping
-    ;(items['decal'] as THREE.Texture).flipY = false
-    ;(items['decal'] as THREE.Texture).colorSpace = THREE.LinearSRGBColorSpace
+  async rush() {
+    if (this.params.isRushing) {
+      // this.rushDone();
+      alert('冲刺结束')
+      return
+    }
+    if (this.params.disableInteract) {
+      return
+    }
+    this.params.disableInteract = true
+    this.clearAllTweens()
+
+    this.furina?.drive()
+
+    this.t4
+      .to(this.params, {
+        speed: 4,
+        duration: 2,
+        ease: 'power2.out',
+        onComplete: () => {
+          this.params.isRushing = true
+          this.params.disableInteract = false
+        }
+      })
+      .to(this.params, {
+        speed: 10,
+        duration: 4,
+        ease: 'power2.out'
+      })
+
+    this.t5.to(this.params, {
+      lightOpacity: 0,
+      duration: 1,
+      ease: 'power2.out',
+      onUpdate: () => {
+        this.startRoom.lightMat.opacity = this.params.lightOpacity
+      }
+    })
+
+    const floorColor = new THREE.Color()
+    const blackColor = new THREE.Color(0x000000)
+    const furinaColor = new THREE.Color()
+    const furinaFadeColor = new THREE.Color(0x666666)
+    this.t6.fromTo(
+      this.params,
+      {
+        floorLerpColor: 0,
+        furinaLerpColor: 0
+      },
+      {
+        floorLerpColor: 1,
+        furinaLerpColor: 1,
+        duration: 4,
+        ease: 'none',
+        onUpdate: () => {
+          floorColor.lerp(blackColor, this.params.floorLerpColor)
+          // this.startRoom.customFloorMat.uniforms.uColor.value.set(floorColor);
+
+          furinaColor.lerp(furinaFadeColor, this.params.furinaLerpColor)
+          this.furina?.setColor(furinaColor)
+        }
+      }
+    )
+
+    this.t7.to(this.params, {
+      envIntensity: 0.01,
+      duration: 1,
+      ease: 'power2.out',
+      onUpdate: () => {
+        this.dynamicEnv.setIntensity(this.params.envIntensity)
+      }
+    })
+
+    this.t8.to(this.params, {
+      speedUpOpacity: 1,
+      cameraFov: 36,
+      duration: 2,
+      ease: 'power2.out',
+      onUpdate: () => {
+        this.speedup.material.uniforms.uOpacity.value = this.params.speedUpOpacity
+
+        const camera = this.camera as THREE.PerspectiveCamera
+        camera.fov = this.params.cameraFov
+        camera.updateProjectionMatrix()
+      }
+    })
+
+    await kokomi.sleep(1000)
+
+    // 流光效果
+    this.scene.environment = this.environment.texture
+
+    this.t9.to(this.params, {
+      carBodyEnvIntensity: 10,
+      cameraShakeIntensity: 1,
+      bloomLuminanceSmoothing: 0.4,
+      bloomIntensity: 2,
+      duration: 4,
+      ease: 'power2.out',
+      onUpdate: () => {
+        this.car.setBodyEnvmapIntensity(this.params.carBodyEnvIntensity)
+        // this.cameraShake.setIntensity(this.params.cameraShakeIntensity)
+        // this.base.post.setLuminanceSmoothing(this.base.params.bloomLuminanceSmoothing)
+        // this.base.post.setIntensity(this.base.params.bloomIntensity)
+      }
+    })
+  }
+  rushDone() {
+    //
   }
 }

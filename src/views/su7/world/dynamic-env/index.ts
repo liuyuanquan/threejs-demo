@@ -1,6 +1,7 @@
 import * as kokomi from 'kokomi.js'
 import * as THREE from 'three'
 import gsap from 'gsap'
+import { FullScreenQuad } from 'three-stdlib'
 
 import vertexShader from './vert.glsl'
 import fragmentShader from './frag.glsl'
@@ -50,13 +51,13 @@ export default class DynamicEnv extends kokomi.Component {
           value: 0
         },
         uIntensity: {
-          value: 0
+          value: 1
         }
       }
     })
     this.material = material
 
-    const quad = new kokomi.FullScreenQuad(material)
+    const quad = new FullScreenQuad(material)
     this.quad = quad
   }
   private getEnvmapFromHDRTexture(renderer: THREE.WebGLRenderer, texture: THREE.Texture) {

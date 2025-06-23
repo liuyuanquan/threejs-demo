@@ -32,12 +32,16 @@ export default class Car extends kokomi.Component {
   handleModel() {
     const body = this.modelParts[2] as THREE.Mesh
     const bodyMat = body.material as THREE.MeshStandardMaterial
-    bodyMat.color = new THREE.Color('#26d6e9')
+    if (this.base.params.isFurina) {
+      bodyMat.color = new THREE.Color(0xffffff)
+      bodyMat.map = this.base.am.items['decal']
+    } else {
+      bodyMat.color = new THREE.Color('#26d6e9')
+    }
     this.bodyMat = bodyMat
 
-    // @ts-ignore
-    this.modelParts.forEach((item: THREE.Mesh) => {
-      if (item.isMesh) {
+    this.modelParts.forEach((item) => {
+      if (item instanceof THREE.Mesh) {
         const mat = item.material as THREE.MeshStandardMaterial
         mat.aoMap = this.base.am.items['ut_car_body_ao']
       }
@@ -45,5 +49,10 @@ export default class Car extends kokomi.Component {
 
     const Wheel = this.modelParts[35] as THREE.Group
     this.wheelModel = Wheel
+  }
+  setBodyEnvmapIntensity(value: number) {
+    if (this.bodyMat) {
+      this.bodyMat.envMapIntensity = value
+    }
   }
 }
