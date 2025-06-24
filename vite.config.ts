@@ -7,13 +7,17 @@ import glsl from 'vite-plugin-glsl'
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    port: 3000,
+    open: true
+  },
   plugins: [vue(), vueJsx(), glsl()],
+  build: {
+    outDir: 'docs'
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
-  },
-  server: {
-    port: 3000
   }
 })
