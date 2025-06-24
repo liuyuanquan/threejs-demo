@@ -7,6 +7,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+// @ts-ignore
 import * as THREE from 'three-176/webgpu'
 import {
   step,
@@ -24,9 +25,13 @@ import {
   mix,
   uv,
   max
+  // @ts-ignore
 } from 'three-176/tsl'
+// @ts-ignore
 import { GUI } from 'three-176/addons/libs/lil-gui.module.min.js'
+// @ts-ignore
 import Stats from 'three-176/addons/libs/stats.module.js'
+// @ts-ignore
 import { OrbitControls } from 'three-176/addons/controls/OrbitControls.js'
 
 const container = ref()
