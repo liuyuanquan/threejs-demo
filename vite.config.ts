@@ -7,6 +7,7 @@ import glsl from 'vite-plugin-glsl'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/threejs-demo/',
   server: {
     port: 3000,
     open: true
