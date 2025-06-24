@@ -24,7 +24,8 @@ export default class Furina extends kokomi.Component {
         if ((item.material as THREE.MeshPhongMaterial).isMeshPhongMaterial) {
           const newMat = new THREE.MeshBasicMaterial({
             transparent: true,
-            map: item.material.map || null
+            map: item.material.map || null,
+            color: new THREE.Color(0x000000)
           })
           item.material = newMat
         }

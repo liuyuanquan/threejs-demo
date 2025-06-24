@@ -22,7 +22,6 @@ export default class World extends kokomi.Base {
   speedup!: SpeedUp // 速度特效
   environment!: kokomi.Environment
   cameraShake!: CameraShake // 相机抖动
-  bgm!: Howl // 音乐
   am: kokomi.AssetManager // 资源管理器
 
   controls!: kokomi.CameraControls
@@ -47,33 +46,37 @@ export default class World extends kokomi.Base {
     ;(window as any).world = this
 
     this.params = {
-      bloomIntensity: 1,
-      bloomLuminanceSmoothing: 1.6,
-      cameraFov: 33.4,
+      speed: 0,
       cameraPos: {
         x: 0,
         y: 0.8,
         z: -11
       },
-      cameraShakeIntensity: 0,
-      carBodyEnvIntensity: 1,
-      disableInteract: false, // 是否禁用交互
-      envIntensity: 0,
-      envWeight: 0,
-      floorLerpColor: 0,
-      furinaLerpColor: 0,
       isCameraMoving: false,
-      isRushing: false,
       lightAlpha: 0,
       lightIntensity: 0,
-      lightOpacity: 1,
+      envIntensity: 0,
+      envWeight: 0,
       reflectIntensity: 0,
-      speed: 0,
+      lightOpacity: 1,
+      floorLerpColor: 0,
+      carBodyEnvIntensity: 1,
+      cameraShakeIntensity: 0,
+      bloomLuminanceSmoothing: 1.6,
+      bloomIntensity: 1,
       speedUpOpacity: 0,
+      cameraFov: 33.4,
+      furinaLerpColor: 0,
+      isRushing: false,
+      disableInteract: false,
       isFurina: window.location.hash === '#furina'
     }
 
     this.renderer.toneMapping = THREE.CineonToneMapping
+
+    this.am = new kokomi.AssetManager(this, resources, {
+      useMeshoptDecoder: true
+    })
 
     this.scene.background = new THREE.Color(0x000000)
 
@@ -94,13 +97,7 @@ export default class World extends kokomi.Base {
     this.controls = controls
 
     this.initHelpers()
-
-    this.am = new kokomi.AssetManager(this, resources, {
-      useMeshoptDecoder: true
-    })
-    this.am.on('ready', () => {
-      this.initWorld()
-    })
+    this.initWorld()
 
     this.update(() => {
       if (this.params.isCameraMoving) {
@@ -115,81 +112,133 @@ export default class World extends kokomi.Base {
       }
     })
   }
-  // done
-  private initWorld() {
-    this.handleAssets()
+  initHelpers() {
+    const axesHelper = new THREE.AxesHelper(150)
+    // this.scene.add(axesHelper)
 
-    this.dynamicEnv = new DynamicEnv(this)
-    this.scene.environment = this.dynamicEnv.envmap
-    this.dynamicEnv.setWeight(1)
+    // this.stats = new kokomi.Stats(this)
 
-    this.startRoom = new StartRoom(this)
-    this.startRoom.addExisting()
-
-    this.car = new Car(this)
-    this.car.addExisting()
-
-    if (this.params.isFurina) {
-      this.furina = new Furina(this)
-      this.furina.addExisting()
-    }
-
-    this.speedup = new SpeedUp(this)
-    this.speedup.addExisting()
-
-    this.environment = new kokomi.Environment(this, {
-      resolution: 512,
-      scene: this.scene,
-      options: {
-        minFilter: THREE.LinearMipMapLinearFilter,
-        anisotropy: 0,
-        depthBuffer: false,
-        generateMipmaps: true
-      },
-      textureType: THREE.UnsignedByteType,
-      ignoreObjects: [this.car.model.scene]
-    })
-
-    this.cameraShake = new CameraShake(this)
-    this.cameraShake.setIntensity(0)
-
-    this.bgm = new Howl({
-      src: 'su7/audio/bgm.mp3',
-      loop: true,
-      volume: 0.5
-    })
-
-    this.interactionManager.add(this.car.model.scene)
-    this.car.model.scene.addEventListener('click' as keyof THREE.Object3DEventMap, () => {
-      this.rush()
-      this.bgm.play()
-    })
-
-    eventBus.on('enter', () => {
-      this.params.disableInteract = false
-    })
-
-    this.enter()
+    // this.debug = new dat.GUI()
   }
-  private enter() {
-    // 禁用交互
-    this.params.disableInteract = true
+  initWorld() {
+    this.am.on('ready', () => {
+      this.handleAssets()
 
-    // 重置环境状态
-    this.dynamicEnv.setWeight(0) // 设置环境光权重为0
-    this.dynamicEnv.setIntensity(0) // 设置环境光强度为0
+      this.dynamicEnv = new DynamicEnv(this)
+      this.scene.environment = this.dynamicEnv.envmap
+      this.dynamicEnv.setWeight(1)
+
+      this.startRoom = new StartRoom(this)
+      this.startRoom.addExisting()
+
+      this.car = new Car(this)
+      this.car.addExisting()
+
+      if (this.params.isFurina) {
+        this.furina = new Furina(this)
+        this.furina.addExisting()
+      }
+
+      this.speedup = new SpeedUp(this)
+      this.speedup.addExisting()
+
+      this.environment = new kokomi.Environment(this, {
+        resolution: 512,
+        scene: this.scene,
+        options: {
+          minFilter: THREE.LinearMipMapLinearFilter,
+          anisotropy: 0,
+          depthBuffer: false,
+          generateMipmaps: true
+        },
+        textureType: THREE.UnsignedByteType,
+        ignoreObjects: [this.car.model.scene]
+      })
+
+      this.cameraShake = new CameraShake(this)
+      this.cameraShake.setIntensity(0)
+
+      this.interactionManager.add(this.car.model.scene)
+      // @ts-ignore
+      this.car.model.scene.addEventListener('click', () => {
+        this.rush()
+      })
+
+      eventBus.on('enter', () => {
+        this.params.disableInteract = false
+      })
+
+      this.enter()
+
+      const bgm = new Howl({
+        src: 'su7/audio/bgm.mp3',
+        loop: true
+      })
+      bgm.play()
+    })
+  }
+  handleAssets() {
+    const texture1 = this.am.items['ut_car_body_ao'] as THREE.Texture
+    texture1.flipY = false
+    texture1.colorSpace = THREE.LinearSRGBColorSpace
+    texture1.minFilter = THREE.NearestFilter
+    texture1.magFilter = THREE.NearestFilter
+    texture1.channel = 1
+
+    const texture2 = this.am.items['ut_startroom_ao'] as THREE.Texture
+    texture2.flipY = false
+    texture2.colorSpace = THREE.LinearSRGBColorSpace
+    texture2.channel = 1
+
+    const texture3 = this.am.items['ut_startroom_light'] as THREE.Texture
+    texture3.flipY = false
+    texture3.colorSpace = THREE.SRGBColorSpace
+    texture3.channel = 1
+
+    const texture4 = this.am.items['ut_floor_normal'] as THREE.Texture
+    texture4.flipY = false
+    texture4.colorSpace = THREE.LinearSRGBColorSpace
+    texture4.wrapS = THREE.RepeatWrapping
+    texture4.wrapT = THREE.RepeatWrapping
+
+    const texture5 = this.am.items['ut_floor_roughness'] as THREE.Texture
+    texture5.flipY = false
+    texture5.colorSpace = THREE.LinearSRGBColorSpace
+    texture5.wrapS = THREE.RepeatWrapping
+    texture5.wrapT = THREE.RepeatWrapping
+
+    const texture6 = this.am.items['decal'] as THREE.Texture
+    texture6.flipY = false
+    texture6.colorSpace = THREE.LinearSRGBColorSpace
+  }
+  clearAllTweens() {
+    this.t1.clear()
+    this.t2.clear()
+    this.t3.clear()
+    this.t4.clear()
+    this.t5.clear()
+    this.t6.clear()
+    this.t7.clear()
+    this.t8.clear()
+    this.t9.clear()
+  }
+  enter() {
+    this.params.disableInteract = true
+    this.dynamicEnv.setWeight(0)
+    this.startRoom.lightMat.emissive.set(new THREE.Color(0x000000))
+    this.startRoom.lightMat.emissiveIntensity = 0
+    this.dynamicEnv.setIntensity(0)
     // this.startRoom.customFloorMat.uniforms.uColor.value.set(
     // 	new THREE.Color("#000000")
     // )
     // this.startRoom.customFloorMat.uniforms.uReflectIntensity.value = 0
+    this.furina?.setColor(new THREE.Color(0x000000))
 
-    document.querySelector('.loader-screen')?.classList.add('hollow')
-
-    // 镜头移动动画
+    // 镜头移动
     this.t1.to(this.params.cameraPos, {
       x: 0,
       y: 0.8,
-      z: -7, // 目标位置：更靠近场景
+      z: -7,
       duration: 4,
       ease: 'power2.inOut',
       onStart: () => {
@@ -201,37 +250,32 @@ export default class World extends kokomi.Base {
       }
     })
 
-    // 灯光出现动画
+    // 灯光出现
     const lightColor = new THREE.Color()
     const blackColor = new THREE.Color(0x000000)
     const whiteColor = new THREE.Color(0xffffff)
     this.t2.to(this.params, {
-      lightAlpha: 1, // 灯光透明度从0到1
-      lightIntensity: 1, // 灯光强度从0到1
+      lightAlpha: 1,
+      lightIntensity: 1,
       // reflectIntensity: 25,
-      furinaLerpColor: 1, // Furina颜色插值
-      delay: 1, // 延迟1秒开始
+      furinaLerpColor: 1,
+      delay: 1,
       ease: 'power2.inOut',
       onUpdate: () => {
-        // 计算当前灯光颜色（从黑色渐变到白色）
         lightColor.copy(blackColor).lerp(whiteColor, this.params.lightAlpha)
-
-        // 更新场景灯光
         this.startRoom.lightMat.emissive.set(lightColor)
         this.startRoom.lightMat.emissiveIntensity = this.params.lightIntensity
 
         // this.startRoom.customFloorMat.uniforms.uColor.value.set(lightColor);
         // this.startRoom.customFloorMat.uniforms.uReflectIntensity.value = this.base.params.reflectIntensity;
 
-        // 更新Furina特效颜色
         this.furina?.setColor(lightColor)
       }
     })
 
-    // 环境光增强动画
     this.t3
       .to(this.params, {
-        envIntensity: 1, // 环境光强度从0到1
+        envIntensity: 1,
         duration: 4,
         delay: 0.5,
         ease: 'power2.inOut',
@@ -242,17 +286,17 @@ export default class World extends kokomi.Base {
       .to(
         this.params,
         {
-          envWeight: 1, // 环境光权重从0到1
+          envWeight: 1,
           duration: 4,
           ease: 'power2.inOut',
           onUpdate: () => {
             this.dynamicEnv.setWeight(this.params.envWeight)
           }
         },
-        '-=2.5' // 与前一动画重叠2.5秒
+        '-=2.5'
       )
   }
-  private async rush() {
+  async rush() {
     if (this.params.isRushing) {
       this.rushDone()
       return
@@ -359,7 +403,7 @@ export default class World extends kokomi.Base {
       }
     })
   }
-  private rushDone() {
+  rushDone() {
     if (this.params.disableInteract) {
       return
     }
@@ -445,61 +489,5 @@ export default class World extends kokomi.Base {
       }
     })
     this.scene.environment = this.dynamicEnv.envmap
-  }
-  // done
-  private handleAssets() {
-    const texture1 = this.am.items['ut_car_body_ao'] as THREE.Texture
-    texture1.flipY = false
-    texture1.colorSpace = THREE.LinearSRGBColorSpace
-    texture1.minFilter = THREE.NearestFilter
-    texture1.magFilter = THREE.NearestFilter
-    texture1.channel = 1
-
-    const texture2 = this.am.items['ut_startroom_ao'] as THREE.Texture
-    texture2.flipY = false
-    texture2.colorSpace = THREE.LinearSRGBColorSpace
-    texture2.channel = 1
-
-    const texture3 = this.am.items['ut_startroom_light'] as THREE.Texture
-    texture3.flipY = false
-    texture3.colorSpace = THREE.SRGBColorSpace
-    texture3.channel = 1
-
-    const texture4 = this.am.items['ut_floor_normal'] as THREE.Texture
-    texture4.flipY = false
-    texture4.colorSpace = THREE.LinearSRGBColorSpace
-    texture4.wrapS = THREE.RepeatWrapping
-    texture4.wrapT = THREE.RepeatWrapping
-
-    const texture5 = this.am.items['ut_floor_roughness'] as THREE.Texture
-    texture5.flipY = false
-    texture5.colorSpace = THREE.LinearSRGBColorSpace
-    texture5.wrapS = THREE.RepeatWrapping
-    texture5.wrapT = THREE.RepeatWrapping
-
-    const texture6 = this.am.items['decal'] as THREE.Texture
-    texture6.flipY = false
-    texture6.colorSpace = THREE.LinearSRGBColorSpace
-  }
-  //done
-  private clearAllTweens() {
-    this.t1.clear()
-    this.t2.clear()
-    this.t3.clear()
-    this.t4.clear()
-    this.t5.clear()
-    this.t6.clear()
-    this.t7.clear()
-    this.t8.clear()
-    this.t9.clear()
-  }
-  // done
-  private initHelpers() {
-    const axesHelper = new THREE.AxesHelper(150)
-    // this.scene.add(axesHelper)
-
-    // this.stats = new kokomi.Stats(this)
-
-    // this.debug = new dat.GUI()
   }
 }

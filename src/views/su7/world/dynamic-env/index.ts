@@ -51,7 +51,7 @@ export default class DynamicEnv extends kokomi.Component {
           value: 0
         },
         uIntensity: {
-          value: 1
+          value: 0
         }
       }
     })
