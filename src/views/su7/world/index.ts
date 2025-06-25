@@ -13,6 +13,7 @@ import Furina from './furina'
 
 import eventBus from './utils/eventBus'
 import { resources } from './resources'
+import PostProcessing from './postprocessing'
 
 export default class World extends kokomi.Base {
   dynamicEnv!: DynamicEnv // 环境贴图
@@ -24,6 +25,7 @@ export default class World extends kokomi.Base {
   cameraShake!: CameraShake // 相机抖动
   bgm!: Howl // 音乐
   am: kokomi.AssetManager // 资源管理器
+  post: Postprocessing
 
   controls!: kokomi.CameraControls
   debug!: dat.GUI
@@ -103,6 +105,8 @@ export default class World extends kokomi.Base {
     this.am.on('ready', () => {
       this.initWorld()
     })
+
+    this.post = new PostProcessing(this)
 
     this.update(() => {
       if (this.params.isCameraMoving) {
@@ -347,8 +351,8 @@ export default class World extends kokomi.Base {
       onUpdate: () => {
         this.car.setBodyEnvIntensity(this.params.carBodyEnvIntensity)
         this.cameraShake.setIntensity(this.params.cameraShakeIntensity)
-        // this.base.post.setLuminanceSmoothing(this.base.params.bloomLuminanceSmoothing)
-        // this.base.post.setIntensity(this.base.params.bloomIntensity)
+        // this.post.setLuminanceSmoothing(this.params.bloomLuminanceSmoothing)
+        // this.post.setIntensity(this.params.bloomIntensity)
       }
     })
   }
@@ -431,10 +435,8 @@ export default class World extends kokomi.Base {
       onUpdate: () => {
         this.car.setBodyEnvIntensity(this.params.carBodyEnvIntensity)
         this.cameraShake.setIntensity(this.params.cameraShakeIntensity)
-        // this.base.post.setLuminanceSmoothing(
-        //   this.base.params.bloomLuminanceSmoothing
-        // );
-        // this.base.post.setIntensity(this.base.params.bloomIntensity);
+        // this.post.setLuminanceSmoothing(this.params.bloomLuminanceSmoothing)
+        // this.post.setIntensity(this.params.bloomIntensity)
       }
     })
     this.scene.environment = this.dynamicEnv.envmap
