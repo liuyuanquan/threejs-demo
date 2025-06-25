@@ -20,6 +20,21 @@ export default class Car extends kokomi.Component {
     this.modelParts = modelParts
 
     this.handleModel()
+
+    const carFolder = this.base.debug.addFolder('Car')
+    carFolder
+      .add(this.base.params, 'carBodyEnvIntensity', 0, 1, 0.01)
+      .name('bodyEnvIntensity')
+      .onChange((value: number) => {
+        this.setBodyEnvIntensity(value)
+      })
+
+    carFolder
+      .addColor(this.base.params, 'carBodyColor')
+      .name('bodyColor')
+      .onChange((value: number) => {
+        this.bodyMat.color = new THREE.Color(value)
+      })
   }
   addExisting() {
     this.container.add(this.model.scene)
@@ -29,14 +44,14 @@ export default class Car extends kokomi.Component {
       item.rotateZ(-this.base.params.speed * 0.03)
     })
   }
-  handleModel() {
+  private handleModel() {
     const body = this.modelParts[2] as THREE.Mesh
     const bodyMat = body.material as THREE.MeshStandardMaterial
     if (this.base.params.isFurina) {
       bodyMat.color = new THREE.Color(0xffffff)
       bodyMat.map = this.base.am.items['decal']
     } else {
-      bodyMat.color = new THREE.Color('#26d6e9')
+      bodyMat.color = new THREE.Color(0x26d6e9)
     }
     this.bodyMat = bodyMat
 
@@ -50,7 +65,7 @@ export default class Car extends kokomi.Component {
     const Wheel = this.modelParts[35] as THREE.Group
     this.wheelModel = Wheel
   }
-  setBodyEnvmapIntensity(value: number) {
+  setBodyEnvIntensity(value: number) {
     if (this.bodyMat) {
       this.bodyMat.envMapIntensity = value
     }

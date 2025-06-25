@@ -1,32 +1,30 @@
 import * as kokomi from 'kokomi.js'
 import * as THREE from 'three'
 import gsap from 'gsap'
-import { FullScreenQuad } from 'three-stdlib'
+
+import type World from '../index'
 
 import vertexShader from './vert.glsl'
 import fragmentShader from './frag.glsl'
-
-import type World from '../index'
 
 const t1 = gsap.timeline()
 
 export default class DynamicEnv extends kokomi.Component {
   declare base: World
   rt: THREE.WebGLRenderTarget
-  quad: kokomi.FullScreenQuad
   material: THREE.ShaderMaterial
+  quad: kokomi.FullScreenQuad
   constructor(base: World) {
     super(base)
 
-    const envmap1 = this.getEnvmapFromHDRTexture(
+    const envmap1 = kokomi.getEnvmapFromHDRTexture(
       this.base.renderer,
       base.am.items['ut_env_night']
     )
-    const envmap2 = this.getEnvmapFromHDRTexture(
+    const envmap2 = kokomi.getEnvmapFromHDRTexture(
       this.base.renderer,
       this.base.am.items['ut_env_light']
     )
-
     const envData = envmap1?.source.data
 
     const rt = new THREE.WebGLRenderTarget(envData.width, envData.height, {
@@ -34,8 +32,8 @@ export default class DynamicEnv extends kokomi.Component {
       magFilter: THREE.LinearFilter,
       type: THREE.HalfFloatType
     })
+    rt.texture.mapping = THREE.CubeUVReflectionMapping
     this.rt = rt
-    this.envmap.mapping = THREE.CubeUVReflectionMapping
 
     const material = new THREE.ShaderMaterial({
       vertexShader,
@@ -47,25 +45,34 @@ export default class DynamicEnv extends kokomi.Component {
         uEnvmap2: {
           value: envmap2
         },
+        // 环境光权重
         uWeight: {
-          value: 0
+          value: this.base.params.envWeight
         },
+        // 环境光强度
         uIntensity: {
-          value: 0
+          value: this.base.params.envIntensity
         }
       }
     })
     this.material = material
 
-    const quad = new FullScreenQuad(material)
+    const quad = new kokomi.FullScreenQuad(material)
     this.quad = quad
-  }
-  private getEnvmapFromHDRTexture(renderer: THREE.WebGLRenderer, texture: THREE.Texture) {
-    const pmremGenerator = new THREE.PMREMGenerator(renderer)
-    pmremGenerator.compileEquirectangularShader()
-    const envmap = pmremGenerator.fromEquirectangular(texture).texture
-    pmremGenerator.dispose()
-    return envmap
+
+    const dynamicEnvFolder = this.base.debug.addFolder('DynamicEnv')
+    dynamicEnvFolder
+      .add(this.base.params, 'envWeight', 0, 1, 0.01)
+      .name('weight')
+      .onChange((value: number) => {
+        this.setWeight(value)
+      })
+    dynamicEnvFolder
+      .add(this.base.params, 'envIntensity', 0, 1, 0.01)
+      .name('intensity')
+      .onChange((value: number) => {
+        this.setIntensity(value)
+      })
   }
   update() {
     this.base.renderer.setRenderTarget(this.rt)

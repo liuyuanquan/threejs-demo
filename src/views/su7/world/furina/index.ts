@@ -40,6 +40,11 @@ export default class Furina extends kokomi.Component {
     this.addAction('driving', 'driving')
     this.playAction('driving')
     this.mixer.update(1)
+
+    const furinaFolder = this.base.debug.addFolder('Furina')
+    furinaFolder
+      .add(this.base.params, 'isFurina')
+      .name('furina')
   }
   addExisting() {
     this.container.add(this.model)

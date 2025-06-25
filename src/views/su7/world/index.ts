@@ -29,7 +29,7 @@ export default class World extends kokomi.Base {
   debug!: dat.GUI
   stats!: kokomi.Stats
 
-  params // 参数
+  params
 
   t1 = gsap.timeline()
   t2 = gsap.timeline()
@@ -56,8 +56,9 @@ export default class World extends kokomi.Base {
         z: -11
       },
       cameraShakeIntensity: 0,
+      carBodyColor: 0x26d6e9,
       carBodyEnvIntensity: 1,
-      disableInteract: false, // 是否禁用交互
+      disableInteract: false,
       envIntensity: 0,
       envWeight: 0,
       floorLerpColor: 0,
@@ -67,10 +68,11 @@ export default class World extends kokomi.Base {
       lightAlpha: 0,
       lightIntensity: 0,
       lightOpacity: 1,
+      startRoomReflector: true,
       reflectIntensity: 0,
       speed: 0,
       speedUpOpacity: 0,
-      isFurina: window.location.hash === '#furina'
+      isFurina: false
     }
 
     this.renderer.toneMapping = THREE.CineonToneMapping
@@ -121,7 +123,6 @@ export default class World extends kokomi.Base {
 
     this.dynamicEnv = new DynamicEnv(this)
     this.scene.environment = this.dynamicEnv.envmap
-    this.dynamicEnv.setWeight(1)
 
     this.startRoom = new StartRoom(this)
     this.startRoom.addExisting()
@@ -129,10 +130,8 @@ export default class World extends kokomi.Base {
     this.car = new Car(this)
     this.car.addExisting()
 
-    if (this.params.isFurina) {
-      this.furina = new Furina(this)
-      this.furina.addExisting()
-    }
+    this.furina = new Furina(this)
+    this.furina.addExisting()
 
     this.speedup = new SpeedUp(this)
     this.speedup.addExisting()
@@ -153,16 +152,9 @@ export default class World extends kokomi.Base {
     this.cameraShake = new CameraShake(this)
     this.cameraShake.setIntensity(0)
 
-    this.bgm = new Howl({
-      src: 'su7/audio/bgm.mp3',
-      loop: true,
-      volume: 0.5
-    })
-
     this.interactionManager.add(this.car.model.scene)
     this.car.model.scene.addEventListener('click' as keyof THREE.Object3DEventMap, () => {
       this.rush()
-      this.bgm.play()
     })
 
     eventBus.on('enter', () => {
@@ -170,18 +162,17 @@ export default class World extends kokomi.Base {
     })
 
     this.enter()
+
+    this.bgm = new Howl({
+      src: 'su7/audio/bgm.mp3',
+      loop: true,
+      volume: 0.5
+    })
+    this.bgm.play()
   }
   private enter() {
     // 禁用交互
     this.params.disableInteract = true
-
-    // 重置环境状态
-    this.dynamicEnv.setWeight(0) // 设置环境光权重为0
-    this.dynamicEnv.setIntensity(0) // 设置环境光强度为0
-    // this.startRoom.customFloorMat.uniforms.uColor.value.set(
-    // 	new THREE.Color("#000000")
-    // )
-    // this.startRoom.customFloorMat.uniforms.uReflectIntensity.value = 0
 
     document.querySelector('.loader-screen')?.classList.add('hollow')
 
@@ -208,7 +199,7 @@ export default class World extends kokomi.Base {
     this.t2.to(this.params, {
       lightAlpha: 1, // 灯光透明度从0到1
       lightIntensity: 1, // 灯光强度从0到1
-      // reflectIntensity: 25,
+      reflectIntensity: 25,
       furinaLerpColor: 1, // Furina颜色插值
       delay: 1, // 延迟1秒开始
       ease: 'power2.inOut',
@@ -220,18 +211,19 @@ export default class World extends kokomi.Base {
         this.startRoom.lightMat.emissive.set(lightColor)
         this.startRoom.lightMat.emissiveIntensity = this.params.lightIntensity
 
-        // this.startRoom.customFloorMat.uniforms.uColor.value.set(lightColor);
-        // this.startRoom.customFloorMat.uniforms.uReflectIntensity.value = this.base.params.reflectIntensity;
+        this.startRoom.customFloorMat.uniforms.uColor.value.set(lightColor)
+        this.startRoom.customFloorMat.uniforms.uReflectIntensity.value =
+          this.params.reflectIntensity
 
         // 更新Furina特效颜色
         this.furina?.setColor(lightColor)
       }
     })
 
-    // 环境光增强动画
+    // 环境光动画
     this.t3
       .to(this.params, {
-        envIntensity: 1, // 环境光强度从0到1
+        envIntensity: 1,
         duration: 4,
         delay: 0.5,
         ease: 'power2.inOut',
@@ -242,7 +234,7 @@ export default class World extends kokomi.Base {
       .to(
         this.params,
         {
-          envWeight: 1, // 环境光权重从0到1
+          envWeight: 1,
           duration: 4,
           ease: 'power2.inOut',
           onUpdate: () => {
@@ -262,6 +254,11 @@ export default class World extends kokomi.Base {
     }
     this.params.disableInteract = true
     this.clearAllTweens()
+
+    const floorColor = new THREE.Color()
+    const blackColor = new THREE.Color(0x000000)
+    const furinaColor = new THREE.Color()
+    const furinaFadeColor = new THREE.Color(0x666666)
 
     this.furina?.drive()
 
@@ -290,10 +287,6 @@ export default class World extends kokomi.Base {
       }
     })
 
-    const floorColor = new THREE.Color()
-    const blackColor = new THREE.Color(0x000000)
-    const furinaColor = new THREE.Color()
-    const furinaFadeColor = new THREE.Color(0x666666)
     this.t6.fromTo(
       this.params,
       {
@@ -307,7 +300,7 @@ export default class World extends kokomi.Base {
         ease: 'none',
         onUpdate: () => {
           floorColor.lerp(blackColor, this.params.floorLerpColor)
-          // this.startRoom.customFloorMat.uniforms.uColor.value.set(floorColor);
+          this.startRoom.customFloorMat.uniforms.uColor.value.set(floorColor)
 
           furinaColor.lerp(furinaFadeColor, this.params.furinaLerpColor)
           this.furina?.setColor(furinaColor)
@@ -352,7 +345,7 @@ export default class World extends kokomi.Base {
       duration: 4,
       ease: 'power2.out',
       onUpdate: () => {
-        this.car.setBodyEnvmapIntensity(this.params.carBodyEnvIntensity)
+        this.car.setBodyEnvIntensity(this.params.carBodyEnvIntensity)
         this.cameraShake.setIntensity(this.params.cameraShakeIntensity)
         // this.base.post.setLuminanceSmoothing(this.base.params.bloomLuminanceSmoothing)
         // this.base.post.setIntensity(this.base.params.bloomIntensity)
@@ -402,7 +395,7 @@ export default class World extends kokomi.Base {
         ease: 'none',
         onUpdate: () => {
           floorColor.lerp(whiteColor, this.params.floorLerpColor)
-          // this.startRoom.customFloorMat.uniforms.uColor.value.set(floorColor)
+          this.startRoom.customFloorMat.uniforms.uColor.value.set(floorColor)
 
           furinaColor.lerp(furinaOriginalColor, this.params.furinaLerpColor)
           this.furina?.setColor(furinaColor)
@@ -436,7 +429,7 @@ export default class World extends kokomi.Base {
       duration: 4,
       ease: 'power2.out',
       onUpdate: () => {
-        this.car.setBodyEnvmapIntensity(this.params.carBodyEnvIntensity)
+        this.car.setBodyEnvIntensity(this.params.carBodyEnvIntensity)
         this.cameraShake.setIntensity(this.params.cameraShakeIntensity)
         // this.base.post.setLuminanceSmoothing(
         //   this.base.params.bloomLuminanceSmoothing
@@ -498,8 +491,8 @@ export default class World extends kokomi.Base {
     const axesHelper = new THREE.AxesHelper(150)
     // this.scene.add(axesHelper)
 
-    // this.stats = new kokomi.Stats(this)
+    this.stats = new kokomi.Stats(this)
 
-    // this.debug = new dat.GUI()
+    this.debug = new dat.GUI()
   }
 }
