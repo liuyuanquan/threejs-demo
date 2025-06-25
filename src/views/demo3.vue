@@ -80,7 +80,7 @@ const initScene = () => {
 
 // 加载背景（盒模型背景，视角在盒子里面，看到的是盒子内部）
 const initSceneBg = () => {
-  new THREE.TextureLoader().load('/demo3/images/sky.png', (texture) => {
+  new THREE.TextureLoader().load('/threejs-demo/demo3/images/sky.png', (texture) => {
     texture.colorSpace = THREE.SRGBColorSpace
     const geometry = new THREE.BoxGeometry(width, height, depth)
     const material = new THREE.MeshBasicMaterial({
@@ -91,7 +91,7 @@ const initSceneBg = () => {
     scene.add(mesh)
   })
 
-  new THREE.TextureLoader().load('/demo3/images/ground.png', (texture) => {
+  new THREE.TextureLoader().load('/threejs-demo/demo3/images/ground.png', (texture) => {
     texture.colorSpace = THREE.SRGBColorSpace
     const geometry = new THREE.PlaneGeometry(width, 400) // 设置地面大小
     const material = new THREE.MeshBasicMaterial({
@@ -106,7 +106,7 @@ const initSceneBg = () => {
 
 // 加载球体
 const initSceneSphere = () => {
-  new THREE.TextureLoader().load('/demo3/images/earth_bg.png', (texture) => {
+  new THREE.TextureLoader().load('/threejs-demo/demo3/images/earth_bg.png', (texture) => {
     // texture.colorSpace = THREE.SRGBColorSpace
     const geometry = new THREE.SphereGeometry(50, 64, 32)
     const material = new THREE.MeshPhongMaterial({
@@ -127,12 +127,12 @@ const initSceneStar = (initZposition: number, starCount: number = 50) => {
   parameters = [
     {
       color: [0.6, 1.0, 0.75], // 使用HSL颜色模式 (H, S, L)
-      sprite: new THREE.TextureLoader().load('/demo3/images/starflake1.png'),
+      sprite: new THREE.TextureLoader().load('/threejs-demo/demo3/images/starflake1.png'),
       size: 50
     },
     {
       color: [0.0, 0.0, 1.0],
-      sprite: new THREE.TextureLoader().load('/demo3/images/starflake2.png'),
+      sprite: new THREE.TextureLoader().load('/threejs-demo/demo3/images/starflake2.png'),
       size: 20
     }
   ]
@@ -218,7 +218,9 @@ const initTubeRoute = (route: any, geometryWidth?: number, geometryHeight?: numb
   scene.add(tube)
 
   const clondGeometry = new THREE.PlaneGeometry(geometryWidth, geometryHeight)
-  const cloudTexture = new THREE.TextureLoader().load('/demo3/images/cloud.png')
+  const cloudTexture = new THREE.TextureLoader().load(
+    '/threejs-demo/demo3/images/cloud.png'
+  )
   const clondMaterial = new THREE.MeshBasicMaterial({
     map: cloudTexture,
     blending: THREE.AdditiveBlending,
@@ -265,7 +267,9 @@ const initCloudMove = (
 
 // 加载人物
 const initSceneHuman = () => {
-  const humanTexture = new THREE.TextureLoader().load('/demo3/images/login_human.png')
+  const humanTexture = new THREE.TextureLoader().load(
+    '/threejs-demo/demo3/images/login_human.png'
+  )
   humanTexture.colorSpace = THREE.SRGBColorSpace
   const geometry = new THREE.PlaneGeometry(154, 190) // 设置平面大小
   const material = new THREE.MeshBasicMaterial({

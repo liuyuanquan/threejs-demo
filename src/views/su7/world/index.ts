@@ -25,7 +25,7 @@ export default class World extends kokomi.Base {
   cameraShake!: CameraShake // 相机抖动
   bgm!: Howl // 音乐
   am: kokomi.AssetManager // 资源管理器
-  post: Postprocessing
+  post: PostProcessing
 
   controls!: kokomi.CameraControls
   debug!: dat.GUI
@@ -490,7 +490,7 @@ export default class World extends kokomi.Base {
   }
   // done
   private initHelpers() {
-    const axesHelper = new THREE.AxesHelper(150)
+    // const axesHelper = new THREE.AxesHelper(150)
     // this.scene.add(axesHelper)
 
     this.stats = new kokomi.Stats(this)

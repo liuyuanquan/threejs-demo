@@ -45,7 +45,7 @@ const initMesh = () => {
     0, 1, 1, 1, 0, 0, 1, 0, // 后
   ])
   geometry.attributes.uv = new THREE.BufferAttribute(uvData, 2)
-  const texture = new THREE.TextureLoader().load('/girl.jpg')
+  const texture = new THREE.TextureLoader().load('/threejs-demo/girl.jpg')
   texture.colorSpace = THREE.SRGBColorSpace
   const material = new THREE.MeshPhongMaterial({
     // color: obj.color,

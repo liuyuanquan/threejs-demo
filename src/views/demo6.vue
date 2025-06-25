@@ -110,8 +110,8 @@ class World {
     }
   }
   async initWorld() {
-    const vertexShader = await this.loadShader('/demo6/vertex.glsl')
-    const fragmentShader = await this.loadShader('/demo6/fragment.glsl')
+    const vertexShader = await this.loadShader('/threejs-demo/demo6/vertex.glsl')
+    const fragmentShader = await this.loadShader('/threejs-demo/demo6/fragment.glsl')
 
     const mat = new THREE.ShaderMaterial({
       uniforms: this.uniforms,
@@ -136,7 +136,7 @@ class World {
     this.sound.setVolume(0.5)
     // 创建音频加载器
     const audioLoader = new THREE.AudioLoader()
-    audioLoader.load('/demo6/Beats.mp3', (buffer) => {
+    audioLoader.load('/threejs-demo/demo6/Beats.mp3', (buffer) => {
       console.log('🚀 ~ World ~ audioLoader.load ~ buffer:', buffer)
       this.audioBuffer = buffer
       this.audioLoaded = true

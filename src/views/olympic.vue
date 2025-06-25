@@ -88,10 +88,10 @@ class WinterOlympicsScene {
     )
 
     this.textureLoader = new THREE.TextureLoader(this.loadingManager)
-    this.textureLoader.setPath('/olympic/')
+    this.textureLoader.setPath('/threejs-demo/olympic/')
 
     this.gltfLoader = new GLTFLoader(this.loadingManager)
-    this.gltfLoader.setPath('/olympic/')
+    this.gltfLoader.setPath('/threejs-demo/olympic/')
   }
 
   /** 初始化场景 */

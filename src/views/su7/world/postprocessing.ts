@@ -15,6 +15,7 @@ export default class PostProcessing extends kokomi.Component {
     const composer = new POSTPROCESSING.EffectComposer(this.base.renderer, {
       multisampling: 8
     })
+    // @ts-ignore
     this.base.composer = composer
 
     composer.addPass(new POSTPROCESSING.RenderPass(this.base.scene, this.base.camera))

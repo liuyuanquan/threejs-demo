@@ -79,7 +79,7 @@ const initObjects = () => {
     0, 1, 1, 1, 0, 0, 1, 0, // 后
   ])
   geometry.attributes.uv = new THREE.BufferAttribute(uvData, 2)
-  const texture = new THREE.TextureLoader().load('/girl.jpg')
+  const texture = new THREE.TextureLoader().load('/threejs-demo/girl.jpg')
   const material = new THREE.MeshLambertMaterial({
     // color: 0xff0000, // 基础颜色
     // transparent: true, // 启用透明度
