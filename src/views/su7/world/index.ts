@@ -351,8 +351,8 @@ export default class World extends kokomi.Base {
       onUpdate: () => {
         this.car.setBodyEnvIntensity(this.params.carBodyEnvIntensity)
         this.cameraShake.setIntensity(this.params.cameraShakeIntensity)
-        // this.post.setLuminanceSmoothing(this.params.bloomLuminanceSmoothing)
-        // this.post.setIntensity(this.params.bloomIntensity)
+        this.post.setLuminanceSmoothing(this.params.bloomLuminanceSmoothing)
+        this.post.setIntensity(this.params.bloomIntensity)
       }
     })
   }
@@ -435,8 +435,8 @@ export default class World extends kokomi.Base {
       onUpdate: () => {
         this.car.setBodyEnvIntensity(this.params.carBodyEnvIntensity)
         this.cameraShake.setIntensity(this.params.cameraShakeIntensity)
-        // this.post.setLuminanceSmoothing(this.params.bloomLuminanceSmoothing)
-        // this.post.setIntensity(this.params.bloomIntensity)
+        this.post.setLuminanceSmoothing(this.params.bloomLuminanceSmoothing)
+        this.post.setIntensity(this.params.bloomIntensity)
       }
     })
     this.scene.environment = this.dynamicEnv.envmap
