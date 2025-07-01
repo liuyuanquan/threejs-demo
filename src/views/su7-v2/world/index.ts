@@ -9,9 +9,9 @@ import Stats from 'three/examples/jsm/libs/stats.module.js'
 import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js'
 import { RGBELoader, OrbitControls } from 'three/examples/jsm/Addons.js'
 
-import DynamicEnv from './DynamicEnv'
+import DynamicEnv from './dynamic-env'
 import StartRoom from './StartRoom'
-import Car from './Car'
+import Car from './car'
 
 export default class World {
   container: HTMLDivElement
@@ -31,6 +31,8 @@ export default class World {
   gui!: GUI
 
   constructor(sel = '.container') {
+    // @ts-ignore
+    window.three = THREE
     this.container = document.querySelector(sel) as HTMLDivElement
 
     this.scene = new THREE.Scene()
