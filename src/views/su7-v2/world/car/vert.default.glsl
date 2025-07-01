@@ -1,4 +1,4 @@
-#define STANDARD
+#define STANDARD // 声明使用标准材质
 varying vec3 vViewPosition;
 #ifdef USE_TRANSMISSION
 	varying vec3 vWorldPosition;
