@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import * as STDLIB from 'three-stdlib'
 import World from '../index'
 import { REFLECT_LAYER } from '../../const'
+import { noiseFunc } from '../../shaders/speedup'
 import vertexShader from './vert.glsl'
 import fragmentShader from './frag.glsl'
 
